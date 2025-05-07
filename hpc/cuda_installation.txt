@@ -1,0 +1,76 @@
+CUDA installation on UBUNTU
+
+**Important:** Before starting, always refer to the official NVIDIA CUDA Installation Guide for your specific distribution and CUDA version for the most up-to-date instructions and pre-installation actions: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+
+1. Check Your GPU
+Make sure your system has an NVIDIA GPU that supports CUDA:
+lspci | grep -i nvidia
+
+2. Disable Nouveau Drivers
+The open-source Nouveau drivers can conflict with NVIDIA drivers. It's recommended to disable them.
+Create a file at `/etc/modprobe.d/blacklist-nouveau.conf` with the following content:
+```
+blacklist nouveau
+options nouveau modeset=0
+```
+Then, regenerate the kernel initramfs:
+sudo update-initramfs -u
+Reboot your system after this step for the changes to take effect.
+
+3. Remove Old NVIDIA Drivers (if needed)
+If you have old or conflicting drivers:
+sudo apt-get --purge remove "*nvidia*"
+sudo apt autoremove
+sudo apt autoclean
+
+4. Install Prerequisites
+sudo apt update
+sudo apt install build-essential dkms
+
+5. Add NVIDIA CUDA Repository
+Go to the NVIDIA CUDA Toolkit Downloads page.
+Choose your OS details (e.g., Linux → x86_64 → Ubuntu → 22.04 → deb (network)), and follow the instructions provided there to add the repository. This usually involves `wget` to download a `.pin` file and `sudo mv` to place it in `/etc/apt/preferences.d/`, followed by `wget` for a `.deb` file and `sudo dpkg -i` to install it, then `sudo apt-get update`.
+
+Example for Ubuntu 22.04 (ensure this is correct for your setup by checking NVIDIA's site):
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
+```
+
+6. Install CUDA Toolkit and Drivers
+You have a few options:
+
+   a) Install the latest CUDA toolkit (includes compatible driver):
+      `sudo apt install cuda`
+
+   b) Install a specific CUDA toolkit version (e.g., 12.2):
+      `sudo apt install cuda-12-2`
+
+   c) Install only the latest NVIDIA drivers (if you want to manage the toolkit separately or already have it):
+      `sudo apt install cuda-drivers`
+
+   NVIDIA recommends installing the `cuda` metapackage (option a or b) as it ensures compatibility.
+
+7. Add CUDA to Path
+Add the following to your `~/.bashrc` or `~/.zshrc` (depending on your shell):
+```bash
+export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+```
+Then, update your current session:
+`source ~/.bashrc`  # or source ~/.zshrc
+
+8. Reboot
+A reboot is often necessary for all changes to take effect, especially after driver installations.
+`sudo reboot`
+
+9. Verify Installation
+After rebooting, check the driver and toolkit:
+`nvidia-smi`  # Shows driver version and GPU status
+`nvcc --version` # Shows CUDA toolkit version
+
+Troubleshooting:
+- If `nvidia-smi` fails, the driver might not be loaded correctly. Check dmesg for errors.
+- If `nvcc --version` fails, ensure CUDA is in your PATH.
+- Secure Boot might prevent kernel modules from loading. You might need to disable it or sign the NVIDIA modules.

@@ -1,0 +1,5 @@
+jupyter nbconvert --to python Ass_1.ipynb
+
+Python Ass_1.py
+
+pip install jupyterlab notebook
